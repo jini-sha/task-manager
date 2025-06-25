@@ -1,39 +1,92 @@
 const express = require('express');
+const mongoose=require('mongoose');
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
 
-let tasks = [];
+// let tasks = []; Store data in array if not database
 
-app.post('/tasks', (req, res) => {
-  const { title, priority, status, deadline } = req.body;
-  const newTask = { id: Date.now(), title, priority, status, deadline };
-  tasks.push(newTask);
-  res.status(201).json(newTask);
-});
+//Connect Database
+async function connectDB(){
+  try{
+    await mongoose.connect('mongodb://localhost:27017/tasksdb');
+  }catch(err){
+    console.log('Error Connecting Database',err);
+  }
+}
+connectDB()
+const taskSchema= new mongoose.Schema({
+  title: String,
+  priority: String,
+  status:String,
+  deadline: String,
+})
+const Task = mongoose.model('Task', taskSchema);
 
-app.get('/tasks', (req, res) => {
-  res.json(tasks);
-});
 
-app.put('/tasks/:id', (req, res) => {
-  const id = Number(req.params.id);
-  const index = tasks.findIndex(t => t.id === id);
-  if (index !== -1) {
-    tasks[index] = { ...tasks[index], ...req.body };
-    res.json(tasks[index]);
-  } else {
-    res.status(404).json({ message: 'Task not found' });
+// Create a new task
+app.post('/tasks',async (req, res) => {
+  // const { title, priority, status, deadline } = req.body;
+  // const newTask = { id: Date.now(), title, priority, status, deadline };
+  // tasks.push(newTask);
+  // res.status(201).json(newTask);
+
+  try{
+    const newTask=new Task(req.body);
+    const savedTask=await newTask.save();
+    res.status(201).json(savedTask);
+  }catch (err){
+    res.status(500).json({ message: err.message });
+  }});
+
+// Get all tasks
+app.get('/tasks',async (req, res) => {
+  try{
+    const tasks=await Task.find();
+    res.json(tasks);
+  }catch(err){
+      res.status(500).json({message: err.message})
   }
 });
 
-app.delete('/tasks/:id', (req, res) => {
-  const id = Number(req.params.id);
-  tasks = tasks.filter(t => t.id !== id);
-  res.json({ message: 'Task deleted' });
+// Update a task by id
+app.put('/tasks/:id', async (req, res) => {
+  try {
+    const updatedTask = await Task.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+
+    if (!updatedTask) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+    res.json(updatedTask);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
 
+
+// Delete a task by id
+app.delete('/tasks/:id', async(req, res) => {
+  try {
+    const deletedTask = await Task.findByIdAndDelete(req.params.id);
+    if (!deletedTask) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+    res.json({ message: 'Task deleted' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+  // const id = Number(req.params.id);
+  // tasks = tasks.filter(t => t.id !== id);
+  // res.json({ message: 'Task deleted' });
+});
+
+// Start the server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
