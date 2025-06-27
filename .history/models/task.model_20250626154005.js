@@ -1,4 +1,4 @@
-const mongoose=require('mongoose');
+const mongoose=requires('mongoose');
 const taskSchema= new mongoose.Schema({
   title: String,
   priority: String,

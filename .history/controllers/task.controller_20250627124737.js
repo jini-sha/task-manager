@@ -1,11 +1,10 @@
 const Task = require('../models/task.model');
-const { StatusCodes } = require('http-status-codes');
 
 exports.createTask = async (req, res) => {
   try {
     const newTask = new Task(req.body);
     const savedTask = await newTask.save();
-    res.status(StatusCodes.CREATED).json(savedTask);
+    res.status(201).json(savedTask);
   } catch (err) {
     next(err)
   }

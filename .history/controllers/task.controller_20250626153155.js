@@ -1,13 +1,12 @@
 const Task = require('../models/task.model');
-const { StatusCodes } = require('http-status-codes');
 
 exports.createTask = async (req, res) => {
   try {
     const newTask = new Task(req.body);
     const savedTask = await newTask.save();
-    res.status(StatusCodes.CREATED).json(savedTask);
+    res.status(201).json(savedTask);
   } catch (err) {
-    next(err)
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -16,7 +15,7 @@ exports.getAllTasks = async (req, res) => {
     const tasks = await Task.find();
     res.json(tasks);
   } catch (err) {
-    next(err)
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -28,11 +27,11 @@ exports.updateTask = async (req, res) => {
       { new: true }
     );
     if (!updatedTask) {
-      return next(err);
+      return res.status(404).json({ message: 'Task not found' });
     }
     res.json(updatedTask);
   } catch (err) {
-    next(err);
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -40,10 +39,10 @@ exports.deleteTask = async (req, res) => {
   try {
     const deletedTask = await Task.findByIdAndDelete(req.params.id);
     if (!deletedTask) {
-      return next(err);
+      return res.status(404).json({ message: 'Task not found' });
     }
     res.json({ message: 'Task deleted' });
   } catch (err) {
-    next(err);
+    res.status(500).json({ message: err.message });
   }
 };

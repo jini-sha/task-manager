@@ -1,11 +1,10 @@
 const Task = require('../models/task.model');
-const { StatusCodes } = require('http-status-codes');
 
 exports.createTask = async (req, res) => {
   try {
     const newTask = new Task(req.body);
     const savedTask = await newTask.save();
-    res.status(StatusCodes.CREATED).json(savedTask);
+    res.status(201).json(savedTask);
   } catch (err) {
     next(err)
   }
@@ -28,11 +27,11 @@ exports.updateTask = async (req, res) => {
       { new: true }
     );
     if (!updatedTask) {
-      return next(err);
+     next(err)
     }
     res.json(updatedTask);
   } catch (err) {
-    next(err);
+    next(err)
   }
 };
 
@@ -40,10 +39,10 @@ exports.deleteTask = async (req, res) => {
   try {
     const deletedTask = await Task.findByIdAndDelete(req.params.id);
     if (!deletedTask) {
-      return next(err);
+     next(err)
     }
     res.json({ message: 'Task deleted' });
   } catch (err) {
-    next(err);
+    next(err)
   }
 };
